@@ -46,7 +46,7 @@ impl Database<Sqlite> {
 pub struct DbId(Uuid);
 
 impl DbId {
-    pub fn new() -> Uuid {
+    pub fn new() -> Self {
         Uuid::new_v4().into()
     }
 
@@ -54,27 +54,22 @@ impl DbId {
         Self(Uuid::nil())
     }
 }
-
 impl From<DbId> for String {
-    fn from(id: DbId) -> Self {    
-        format!("{}",id.0)
+    fn from(id: DbId) -> Self {
+        format!("{}", id.0)
     }
 }
 
-impl From<Uuid> for String {
-    fn from(id: DbId) -> Self {    
-        format!("{}",id.0)
-    }
-}
-
+/// The default behavior is to create a [`DbId`]
 impl Default for DbId {
     fn default() -> Self {
-        Self(Self::new())
+        Self::new()
     }
 }
 
+
 impl FromStr for DbId {
-    type Err = Error;
+    type Err = uuid::Error;
     fn from_str(id: &str) -> Result<Self, Self::Err> {
         Ok(DbId(Uuid::parse_str(id)?))
     }

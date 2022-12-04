@@ -1,5 +1,6 @@
 use crate::domain::clip::ClipError;
 use serde::{Serialize, Deserialize};
+use rocket::form::{FromFormField, ValueField, self, Error};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Content(String);
@@ -19,5 +20,15 @@ impl Content {
 
     pub fn as_str(&self) -> &str {
         self.0.as_str()
+    }
+}
+
+#[rocket::async_trait]
+impl<'r> FromFormField<'r> for Content {
+    fn from_value(field: ValueField<'r>) -> rocket::form::Result<'r,Self> {
+        Ok(
+            Self::new(field.value)
+                .map_err(|e| Error::validation(format!("{}", e)))?
+        )
     }
 }
