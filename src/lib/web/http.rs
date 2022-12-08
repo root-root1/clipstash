@@ -96,15 +96,15 @@ async fn new_clip(
 }
 
 #[rocket::post("/clip/<shortcode>", data = "<form>")]
-async fn submit_clip_password(
+pub async fn submit_clip_password(
     cookies: &CookieJar<'_>,
     form: Form<Contextual<'_, form::GetPasswordProtectedClip>>,
+    shortcode: ShortCode,
     database: &State<AppDatabase>,
     renderer: &State<Renderer<'_>>,
-    shortcode: ShortCode
 ) -> Result<RawHtml<String>, PageError> {
-    if let Some(clip) = &form.value {
-        let req = service::ask::GetClip{
+    if let Some(form) = &form.value {
+        let req = service::ask::GetClip {
             shortcode: shortcode.clone(),
             password: form.password.clone(),
         };
@@ -117,23 +117,22 @@ async fn submit_clip_password(
                 ));
                 Ok(RawHtml(renderer.render(context, &[])))
             }
-
             Err(e) => match e {
                 ServiceError::PermissionError(e) => {
                     let context = ctx::PasswordRequired::new(shortcode);
                     Ok(RawHtml(renderer.render(context, &[e.as_str()])))
-                },
-                ServiceError::NotFound => Err(PageError::NotFound("Clip not Found".to_owned())),
-                _ => Err(PageError::Internatl("Internal server Error {}".to_owned()))
+                }
+                ServiceError::NotFound => Err(PageError::NotFound("Clip not found".to_owned())),
+                _ => Err(PageError::Internatl("server error".to_owned())),
             }
         }
-    }else{
+    } else {
         let context = ctx::PasswordRequired::new(shortcode);
         Ok(RawHtml(renderer.render(
             context,
-            &["Password is Required for this clip"]
+            &["A password is required to view this clip"],
         )))
-    }   
+    }
 }
 
 pub fn routes() -> Vec<rocket::Route> {
